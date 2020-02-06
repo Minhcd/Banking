@@ -1,0 +1,11 @@
+<div class="phx-hero">
+  <h1>Sign in</h1>
+  <form action="" method="POST">
+    <label for="account">Account</label>
+    <input type="text" class="form-control" name="account" id="account">
+    <label for="password">Password</label>
+    <input type="password" class="form-control" name="password" id="password">
+     <input type="hidden" value="<%= @token %>" name="_csrf_token"/>
+  <button  type="submit">Submit</button>
+  </form>
+  </div>

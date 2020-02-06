@@ -1,0 +1,10 @@
+<div class="container">
+<h1 >NXH bank</h1>
+<a href="http://localhost:4000/bank/signin">
+<button >Sign in</button>
+</a>
+<a href="http://localhost:4000/bank/signup">
+<button >Sign up</button>
+</a>
+
+</div>

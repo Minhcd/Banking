@@ -1,0 +1,56 @@
+<h1>Signing up Successfully</h1>
+<h2>Hello <%= @account %> ! </h2>
+<p style="font-size:50px"> Money in account : <%= @money %> $ </p>
+<a><button type="button" class="btn btn-success" data-toggle="modal" data-target="#deposit">Deposit money</button></a>
+<a><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#withdraw">Withdrawals</button></a>
+
+<!-- Deposit Modal -->
+<div class="modal fade" id="deposit" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" >Deposit money</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST">
+            <label for="money">Money</label>
+            <input class="form-control" name="deposit" id="money"></input>
+            <input type="hidden" name="withdraw" >
+            <input type="hidden" value="<%= @token %>" name="_csrf_token"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <input type="submit" value="deposit" name="submit"></input>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Withdrawal Modal -->
+<div class="modal fade" id="withdraw" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" >Withdraw money</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST">
+            <label>Money</label>
+            <input class="form-control" name="withdraw"></input>
+            <input type="hidden" name="deposit"/>
+            <input type="hidden" value="<%= @token %>" name="_csrf_token"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <input type="submit" value="withdraw" name="submit"></input>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
