@@ -2,6 +2,7 @@ defmodule HelloWeb.Plugs.Authorization do
     import Plug.Conn
     #import Phoenix.Controller
     use Phoenix.Controller
+    alias HelloWeb.Router.Helpers
 
     def init(_params)do
     end
@@ -19,6 +20,8 @@ defmodule HelloWeb.Plugs.Authorization do
         conn
         else
         conn
+        |> put_flash(:error, "Đường dẫn không hợp lệ")
+        |> redirect(to: Helpers.bank_path(conn, :signin))
         |> halt()
         end
     end

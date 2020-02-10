@@ -23,9 +23,21 @@ defmodule HelloWeb.BankController do
       render(conn,"signin.html", token: get_csrf_token())
     end
 
-    def signuphandler(conn,%{"account"=>account,"password"=>password})do
-      Repo.insert(%Usermanage{account: account,password: password})
-      conn |> redirect(to: "/bank/account/#{account}")
+    def signuphandler(conn,%{"account"=>account,"password"=>password}) do
+      id = Usermanage 
+              |> where([u], u.account == ^account) 
+              |> select([u], u.id)
+              |> Repo.one()
+      if id != nil do
+        conn
+        |> put_flash(:error, "Tên đăng nhập đã tồn tại")
+        |> redirect(to: Helpers.bank_path(conn, :signup))
+        |> halt()
+      else
+        Repo.insert(%Usermanage{account: account,password: password})
+        #conn |> redirect(to: "/bank/account/#{account}")
+        conn |> redirect(to: "/bank/signin")
+      end
     end
 
 
@@ -42,7 +54,11 @@ defmodule HelloWeb.BankController do
         # render(conn,"show.html",account: account,money: money)
         # IO.inspect conn
       else
-        render(conn,"loginfalse.html")
+        #render(conn,"loginfalse.html")
+        conn
+        |> put_flash(:error, "Tên đăng nhập hoặc mật khẩu không hợp lệ")
+        |> redirect(to: Helpers.bank_path(conn, :signin))
+        |> halt()
       end
     end
 
