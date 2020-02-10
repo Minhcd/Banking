@@ -34,7 +34,9 @@ defmodule HelloWeb.BankController do
         |> redirect(to: Helpers.bank_path(conn, :signup))
         |> halt()
       else
-        Repo.insert(%Usermanage{account: account,password: password})
+        params = %{account: account,password: password}
+        insert_changeset = Usermanage.insert_changeset(%Usermanage{},params)
+        Repo.insert(insert_changeset)
         #conn |> redirect(to: "/bank/account/#{account}")
         conn |> redirect(to: "/bank/signin")
       end

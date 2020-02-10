@@ -8,7 +8,7 @@ defmodule HelloWeb.Plugs.SetCurrentUser do
     def call(conn,_params)do
         user_id = get_session(conn, :user_id)
         user_account = get_session(conn, :user_account)
-        
+            
         cond do
             user_id && Repo.get(Usermanage, user_id) ->
                 conn

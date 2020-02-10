@@ -1,4 +1,4 @@
-<h1>Signing up Successfully</h1>
+<h1>Signing in Successfully</h1>
 <h2>Hello <%= @account %> ! </h2>
 <p style="font-size:50px"> Money in account : <%= @money %> $ </p>
 <a><button type="button" class="btn btn-success" data-toggle="modal" data-target="#deposit">Deposit money</button></a>

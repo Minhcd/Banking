@@ -14,5 +14,11 @@ defmodule Hello.Usermanage do
       |> validate_required([:money])
     end
 
+    def insert_changeset(%Usermanage{}=user, attrs) do
+      user
+      |> cast(attrs,[:account, :password, :money])
+      |> validate_required([:account, :password])
+    end
+
   end
 

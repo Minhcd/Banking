@@ -4,7 +4,7 @@ defmodule HelloWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug :fetch_session # fetach session store, also fetch cookies
+    plug :fetch_session # fetch session store, also fetch cookies
     plug :fetch_flash # fetch flash storage
     plug :protect_from_forgery # enable CSRF protection
     plug :put_secure_browser_headers # put headers that improve browser security
@@ -39,8 +39,6 @@ defmodule HelloWeb.Router do
   #   pipe_through :api
   # end
 
-  # def test_assign(conn,_params) do
-  #   assign(conn,:test,"ok")
-  # end
+ 
 end
 
