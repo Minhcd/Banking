@@ -1,0 +1,15 @@
+<a href="http://localhost:4000/bank/account/<%= @account %>/<%= @id %>"><button>Come back</button></a>
+<div class="container">
+    <form method="POST">
+            <h1 class="text-center">Transaction</h1>            
+            <label>Receiver's id</label>
+            <input class="form-control" name="receiverid" />
+            <label>Reveiver's name</label>
+            <input class="form-control" name="receivername">
+            <label for="money">Money</label>
+            <input class="form-control" name="money" id="money"></input>
+            <input type="hidden" value="<%= @token %>" name="_csrf_token"/>
+        <input type="submit" value="transfer" name="submit"></input>
+      </form>
+</div>
+ 

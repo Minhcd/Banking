@@ -4,11 +4,17 @@ defmodule HelloWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug :fetch_session # fetach session store, also fetch cookies
+    plug :fetch_flash # fetch flash storage
+    plug :protect_from_forgery # enable CSRF protection
+    plug :put_secure_browser_headers # put headers that improve browser security
+    # plug :"Controller.test"
+    # plug LearningPlug2, %{}
+    # plug :test_assign
+    plug HelloWeb.Plugs.SetCurrentUser
+    
   end
+
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -16,7 +22,6 @@ defmodule HelloWeb.Router do
 
   scope "/", HelloWeb do
     pipe_through :browser
-
     get "/", PageController, :index
     get "/bank",BankController,:index
     get "/bank/signup",BankController, :signup
@@ -25,12 +30,17 @@ defmodule HelloWeb.Router do
     post "/bank/signin", BankController, :signinhandler
     get "/bank/account/:name/:id", BankController, :account
     post "/bank/account/:name/:id", BankController, :deposit
-    post "/bank/account/:name/:id", BankController, :withdraw
-    
+    get "/bank/account/:name/:id/transaction", BankController, :transaction
+    post "/bank/account/:name/:id/transaction", BankController, :transactionhandler  
   end
 
   # Other scopes may use custom stacks.
   # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
+
+  # def test_assign(conn,_params) do
+  #   assign(conn,:test,"ok")
+  # end
 end
+

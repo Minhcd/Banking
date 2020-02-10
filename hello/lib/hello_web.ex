@@ -20,7 +20,6 @@ defmodule HelloWeb do
   def controller do
     quote do
       use Phoenix.Controller, namespace: HelloWeb
-
       import Plug.Conn
       import HelloWeb.Gettext
       alias HelloWeb.Router.Helpers, as: Routes
