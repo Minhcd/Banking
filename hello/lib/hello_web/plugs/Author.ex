@@ -1,7 +1,7 @@
 defmodule HelloWeb.Plugs.Authorization do
     import Plug.Conn
-    import Phoenix.Controller
-
+    #import Phoenix.Controller
+    use Phoenix.Controller
 
     def init(_params)do
     end
