@@ -20,7 +20,7 @@ defmodule HelloWeb.Plugs.Authorization do
         conn
         else
         conn
-        |> put_flash(:error, "Đường dẫn không hợp lệ")
+        |> put_flash(:error, "Bạn không được phép truy cập")
         |> redirect(to: Helpers.bank_path(conn, :signin))
         |> halt()
         end

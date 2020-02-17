@@ -2,6 +2,7 @@ defmodule HelloWeb.BankController do
     use HelloWeb,:controller
     alias Hello.{Usermanage,Repo}
     alias HelloWeb.Router.Helpers
+    alias Argon2
     import Ecto.Query
 
     # plug LearningPlug, %{}
@@ -44,24 +45,26 @@ defmodule HelloWeb.BankController do
 
 
     def signinhandler(conn,%{"account"=>account,"password"=>password}) do
-      id = Usermanage 
-              |> where([u], u.account == ^account and u.password == ^password) 
-              |> select([u], u.id)
-              |> Repo.one()
-      if id != nil do
-        conn 
-        |>put_session(:user_id,id)
-        |>put_session(:user_account,account)
-        |>redirect(to: "/bank/account/#{account}/#{id}")
-        # render(conn,"show.html",account: account,money: money)
-        # IO.inspect conn
-      else
-        #render(conn,"loginfalse.html")
-        conn
-        |> put_flash(:error, "Tên đăng nhập hoặc mật khẩu không hợp lệ")
-        |> redirect(to: Helpers.bank_path(conn, :signin))
-        |> halt()
-      end
+      query = Usermanage |> where([u], u.account == ^account) 
+      case Repo.one(query) do
+        nil ->
+          conn
+          |> put_flash(:error, "Tên đăng nhập hoặc mật khẩu không hợp lệ")
+          |> redirect(to: Helpers.bank_path(conn, :signin))
+          |> halt()
+        user ->
+          if Argon2.verify_pass(password, user.password) do
+            conn 
+            |>put_session(:user_id,user.id)
+            |>put_session(:user_account,user.account)
+            |>redirect(to: "/bank/account/#{user.account}/#{user.id}")
+          else
+            conn
+            |> put_flash(:error, "Tên đăng nhập hoặc mật khẩu không hợp lệ")
+            |> redirect(to: Helpers.bank_path(conn, :signin))
+            |> halt()
+          end
+      end        
     end
 
     def account(conn,%{"name"=>account,"id"=>id}) do
