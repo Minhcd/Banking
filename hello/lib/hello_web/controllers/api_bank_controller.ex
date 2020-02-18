@@ -46,13 +46,13 @@ defmodule HelloWeb.ApiBankController do
     # SIGNIN
     def signin(conn,%{"account"=>account,"password"=>password}) do
         id = Usermanage.check_user(account,password)
-      if id != nil do
-        token = MessageVerifier.sign(account,@secret)
-        user = %{id: id,accesstoken: token}
-        json conn,user
-      else
-        conn |> send_resp(404,"Not found")
-      end
+        if id != nil do
+            token = MessageVerifier.sign(account,@secret)
+            user = %{id: id,accesstoken: token}
+            json conn,user
+        else
+            conn |> send_resp(404,"Not found")
+        end
     end
 
     defp struct_to_map(struct) do
@@ -60,4 +60,4 @@ defmodule HelloWeb.ApiBankController do
         |> Map.from_struct()
         |> Map.drop([:__meta__])
     end
-  end
+end

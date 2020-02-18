@@ -45,6 +45,5 @@ defmodule HelloWeb.Router do
     post "/Transfer"    ,ApiBankController, :transfer
   end
 
- 
 end
 

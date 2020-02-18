@@ -6,6 +6,7 @@ defmodule HelloWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
+    max_age: 60,
     key: "_hello_key",
     signing_salt: "BpqeCBtv"
   ]
