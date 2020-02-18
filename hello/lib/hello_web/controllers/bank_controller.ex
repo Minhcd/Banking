@@ -1,6 +1,6 @@
 defmodule HelloWeb.BankController do
     use HelloWeb,:controller
-    alias Hello.{Usermanage,Repo}
+    alias Hello.{Usermanage,Repo,HistoryTransaction}
     alias HelloWeb.Router.Helpers
     import Ecto.Query
 
@@ -24,39 +24,27 @@ defmodule HelloWeb.BankController do
     end
 
     def signuphandler(conn,%{"account"=>account,"password"=>password}) do
-      id = Usermanage 
-              |> where([u], u.account == ^account) 
-              |> select([u], u.id)
-              |> Repo.one()
+      id = Usermanage.show_id(account)
       if id != nil do
         conn
         |> put_flash(:error, "Tên đăng nhập đã tồn tại")
         |> redirect(to: Helpers.bank_path(conn, :signup))
         |> halt()
       else
-        params = %{account: account,password: password}
-        insert_changeset = Usermanage.insert_changeset(%Usermanage{},params)
-        Repo.insert(insert_changeset)
-        #conn |> redirect(to: "/bank/account/#{account}")
+        Usermanage.insert_user(account,password)
         conn |> redirect(to: "/bank/signin")
       end
     end
 
 
     def signinhandler(conn,%{"account"=>account,"password"=>password}) do
-      id = Usermanage 
-              |> where([u], u.account == ^account and u.password == ^password) 
-              |> select([u], u.id)
-              |> Repo.one()
+      id = Usermanage.check_user(account,password)
       if id != nil do
         conn 
         |>put_session(:user_id,id)
         |>put_session(:user_account,account)
         |>redirect(to: "/bank/account/#{account}/#{id}")
-        # render(conn,"show.html",account: account,money: money)
-        # IO.inspect conn
       else
-        #render(conn,"loginfalse.html")
         conn
         |> put_flash(:error, "Tên đăng nhập hoặc mật khẩu không hợp lệ")
         |> redirect(to: Helpers.bank_path(conn, :signin))
@@ -64,33 +52,35 @@ defmodule HelloWeb.BankController do
       end
     end
 
-    def account(conn,%{"name"=>account,"id"=>id}) do
-      
-      deposit = Usermanage 
-                |> where([u], u.id == ^id )
-                |> select([u], u.money)
-                |> Repo.one()      
+    def account(conn,%{"name"=>account,"id"=>id}) do  
+      deposit = Usermanage.show_money(id) 
       conn  |> assign(:current_user_id, id)
             |> render("show.html",money: deposit,account: account,id: id,token: get_csrf_token())
-      # IO.inspect conn
     end
 
     def deposit(conn,%{"name"=>account,"id"=>id,"deposit"=>deposit,"withdraw"=>withdraw,"submit"=>submit})do
-      money = Usermanage 
-              |> where([u],u.id == ^id)
-              |> select([u], u.money)
-              |> Repo.one()
+      money = Usermanage.show_money(id)
       if submit == "deposit" do
+      HistoryTransaction.create_datetime(
+        %{
+          user_id: id,
+          datetime: DateTime.utc_now,
+          action: submit,
+          money: elem(Integer.parse(deposit),0)
+          })
       money = money + elem(Integer.parse(deposit),0)
-      params = %{money: money}
-      changeset = Usermanage.changeset(%Usermanage{id: elem(Integer.parse(id),0)},params)
-      Repo.update(changeset)
+      Usermanage.update_money(id,money)
       conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
       else if submit == "withdraw" do
+      HistoryTransaction.create_datetime(
+        %{
+          user_id: id,
+          datetime: DateTime.utc_now,
+          action: submit,
+          money: elem(Integer.parse(withdraw),0)
+          })
       money = money - elem(Integer.parse(withdraw),0)
-      params = %{money: money}
-      changeset = Usermanage.changeset(%Usermanage{id: elem(Integer.parse(id),0)},params)
-      Repo.update(changeset)
+      Usermanage.update_money(id,money)
       conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
       else
       conn 
@@ -108,24 +98,23 @@ defmodule HelloWeb.BankController do
 
     def transactionhandler(conn,%{"receiverid"=>receiverid,"receivername"=>receivername,"money"=>money,"name"=>name,"id"=>id}) do
       money = elem(Integer.parse(money),0)
-      target_money = Usermanage
-                    |> where([u], u.id == ^receiverid and u.account ==^receivername)
-                    |> select([u], u.money)
-                    |> Repo.one() 
+      HistoryTransaction.create_transfertime(
+        %{
+          user_id: id,
+          datetime: DateTime.utc_now,
+          action: "transfer",
+          receiver_id: receiverid,          
+          money: money
+          })
+      if elem(Integer.parse(receiverid),0) == Usermanage.show_id(receivername) do
+      target_money = Usermanage.show_money(receiverid)
+      source_money = Usermanage.show_money(id)
       target_money = target_money + money
-      source_money = Usermanage
-                    |> where([u], u.id == ^id and u.account ==^name)
-                    |> select([u], u.money)
-                    |> Repo.one() 
-      source_money = source_money - money                    
-      target_params=%{money: target_money}
-      source_params=%{money: source_money}
-      source_changeset = Usermanage.changeset(%Usermanage{id: elem(Integer.parse(id),0)},source_params)
-      target_changeset = Usermanage.changeset(%Usermanage{id: elem(Integer.parse(receiverid),0)},target_params)
-      Repo.update(source_changeset)
-      Repo.update(target_changeset)
+      source_money = source_money - money
+      Usermanage.update_money(receiverid,target_money)
+      Usermanage.update_money(id,source_money)                      
+      end
       conn |> redirect(to: Helpers.bank_path(conn, :transaction, name,id))
-      # render(conn,"transaction.html",account: name,id: id,token: get_csrf_token())
     end
 
     def home_page(conn,_params) do

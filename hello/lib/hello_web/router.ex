@@ -35,9 +35,15 @@ defmodule HelloWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", HelloWeb do
-  #   pipe_through :api
-  # end
+  scope "/api/bank", HelloWeb do
+    pipe_through :api
+    get  "/GetAllUsers" ,ApiBankController, :show_all
+    post "/Signup"      ,ApiBankController, :create
+    post "/Signin"      ,ApiBankController, :signin
+    post "/Deposit"     ,ApiBankController, :deposit
+    post "/Withdraw"    ,ApiBankController, :withdraw
+    post "/Transfer"    ,ApiBankController, :transfer
+  end
 
  
 end
