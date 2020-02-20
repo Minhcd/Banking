@@ -3,7 +3,7 @@ defmodule Hello.Usermanage do
     import Ecto.Changeset
     import Ecto.Query
     alias Hello.{Usermanage,Repo}
-    alias Argon2
+    alias Bcrypt
 
     schema "users" do
       field :account, :string
@@ -25,7 +25,7 @@ defmodule Hello.Usermanage do
     end
     
     defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = insert_changeset) do
-      change(insert_changeset, password: Argon2.hash_pwd_salt(password))
+      change(insert_changeset, password: Bcrypt.hash_pwd_salt(password))
     end
     
     defp put_password_hash(insert_changeset), do: insert_changeset

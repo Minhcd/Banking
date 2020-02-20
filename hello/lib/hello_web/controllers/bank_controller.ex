@@ -2,7 +2,7 @@ defmodule HelloWeb.BankController do
     use HelloWeb,:controller
     alias Hello.{Usermanage,Repo,HistoryTransaction}
     alias HelloWeb.Router.Helpers
-    alias Argon2
+    alias Bcrypt
     import Ecto.Query
 
     # plug LearningPlug, %{}
@@ -47,7 +47,7 @@ defmodule HelloWeb.BankController do
           |> redirect(to: Helpers.bank_path(conn, :signin))
           |> halt()
         user ->
-          if Argon2.verify_pass(password, user.password) do
+          if Bcrypt.verify_pass(password,user.password) do
             conn 
             |>put_session(:user_id,user.id)
             |>put_session(:user_account,user.account)
