@@ -43,6 +43,8 @@ defmodule HelloWeb.Router do
     post "/Deposit"     ,ApiBankController, :deposit
     post "/Withdraw"    ,ApiBankController, :withdraw
     post "/Transfer"    ,ApiBankController, :transfer
+    get "/LoginWithFacebook", ApiBankController, :facebook_login
+    get "/FacebookHandler" , ApiBankController, :facebook_login_handler  
   end
 
  
