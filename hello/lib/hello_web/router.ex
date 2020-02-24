@@ -28,9 +28,9 @@ defmodule HelloWeb.Router do
     get "/bank/signin",BankController, :signin
     post "/bank/signup", BankController, :signuphandler
     post "/bank/signin", BankController, :signinhandler
-    get "/bank/account/:name/:id", BankController, :account
+    get  "/bank/account/:name/:id", BankController, :account
     post "/bank/account/:name/:id", BankController, :deposit
-    get "/bank/account/:name/:id/transaction", BankController, :transaction
+    get  "/bank/account/:name/:id/transaction", BankController, :transaction
     post "/bank/account/:name/:id/transaction", BankController, :transactionhandler 
    
   end

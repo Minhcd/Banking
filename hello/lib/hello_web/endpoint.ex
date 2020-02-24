@@ -7,7 +7,8 @@ defmodule HelloWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_hello_key",
-    signing_salt: "BpqeCBtv"
+    signing_salt: "BpqeCBtv",
+    encryption_salt: "d9wxjdlNNlsdw--=d"
   ]
 
   socket "/socket", HelloWeb.UserSocket,

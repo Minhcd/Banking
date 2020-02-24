@@ -12,8 +12,9 @@ defmodule HelloWeb.ApiBankController do
                 |> Enum.map(fn struct -> struct_to_map(struct)  end)
         json conn, users
     end
-
-    def create(conn, %{"account" => account,"password" => password}) do
+    @psw_secret "sfowieru091203921idsadfijljxzvcz00zaalkNDSADLKS09800DZMXCMkmsfasdfas123131dffd332d+_="
+    def create(conn, %{"account" => account,"password" => password}) do 
+        password = :crypto.hash(:sha256, password<>@psw_secret) |> Base.url_encode64()
         Usermanage.insert_user(account,password)
         conn |> send_resp(200,"Signup successfully")
     end
@@ -85,9 +86,10 @@ defmodule HelloWeb.ApiBankController do
 
     # SIGNIN
     def signin(conn,%{"account"=>account,"password"=>password})  do
+        password = :crypto.hash(:sha256, password<>@psw_secret) |> Base.url_encode64()
         case token_sign_in(account,password) do
             #  {:ok, token, claims} -> json conn, %{accesstoken: token}
-                    {:ok, token} -> json conn, %{accesstoken: token}
+                    {:ok, token} ->   json conn, %{accesstoken: token}
                                 _ ->  send_resp(conn, 404, "Not found")
             end
     end
@@ -263,3 +265,4 @@ defmodule HelloWeb.ApiBankController do
     end
   end
 
+ 
