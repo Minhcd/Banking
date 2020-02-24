@@ -23,17 +23,23 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
     get "/", PageController, :index
-    get "/bank",BankController,:index
-    get "/bank/signup",BankController, :signup
-    get "/bank/signin",BankController, :signin
-    post "/bank/signup", BankController, :signuphandler
-    post "/bank/signin", BankController, :signinhandler
-    get "/bank/account/:name/:id", BankController, :account
-    post "/bank/account/:name/:id", BankController, :deposit
-    get "/bank/account/:name/:id/transaction", BankController, :transaction
-    post "/bank/account/:name/:id/transaction", BankController, :transactionhandler  
   end
 
+  scope "/bank", HelloWeb do
+    pipe_through :browser
+    get "/",BankController,:index
+    get "/signup",BankController, :signup
+    get "/signin",BankController, :signin
+    post "/signup", BankController, :signuphandler
+    post "/signin", BankController, :signinhandler
+    get "/account/:name/:id", BankController, :account
+    post "/account/:name/:id", BankController, :deposit
+    get "/account/:name/:id/transaction", BankController, :transaction
+    post "/account/:name/:id/transaction", BankController, :transactionhandler
+    #------- Facebook oauth ----------------------------------- 
+    get "/LoginWithFacebook",  BankController, :facebook_login
+    get "/FacebookHandler"  ,  BankController, :facebook_login_handler
+  end
   # Other scopes may use custom stacks.
   scope "/api/bank", HelloWeb do
     pipe_through :api

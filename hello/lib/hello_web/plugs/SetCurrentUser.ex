@@ -1,6 +1,7 @@
 defmodule HelloWeb.Plugs.SetCurrentUser do
     import Plug.Conn
     alias Hello.{Usermanage,Repo}
+    alias Hello.{Socialusermanage,Repo}
 
     def init(_params) do
     end
@@ -15,6 +16,11 @@ defmodule HelloWeb.Plugs.SetCurrentUser do
                 |> assign(:user_id,user_id)
                 |> assign(:user_account, user_account)                
                 |> assign(:user_signed_in?, true)
+            user_id && Repo.get(Socialusermanage, user_id) ->
+                conn
+                |> assign(:user_id,user_id)
+                |> assign(:user_account, user_account)                
+                |> assign(:user_signed_in?, true)    
             true ->
                 conn
                 |> assign(:user_id, nil)
