@@ -31,7 +31,8 @@ defmodule HelloWeb.Router do
     get "/bank/account/:name/:id", BankController, :account
     post "/bank/account/:name/:id", BankController, :deposit
     get "/bank/account/:name/:id/transaction", BankController, :transaction
-    post "/bank/account/:name/:id/transaction", BankController, :transactionhandler  
+    post "/bank/account/:name/:id/transaction", BankController, :transactionhandler 
+   
   end
 
   # Other scopes may use custom stacks.
@@ -43,10 +44,10 @@ defmodule HelloWeb.Router do
     post "/Deposit"     ,ApiBankController, :deposit
     post "/Withdraw"    ,ApiBankController, :withdraw
     post "/Transfer"    ,ApiBankController, :transfer
-    get "/LoginWithFacebook", ApiBankController, :facebook_login
-    get "/FacebookHandler" , ApiBankController, :facebook_login_handler  
+     #------- Facebook oauth ----------------------------------- 
+     get "/LoginWithFacebook",  ApiBankController, :facebook_login
+     get "/FacebookHandler"  ,  ApiBankController, :facebook_login_handler  
   end
-
  
 end
 

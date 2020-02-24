@@ -36,3 +36,4 @@ import_config "#{Mix.env()}.exs"
 config :hello, Hello.Guardian,
       issuer: "bankapi",
       secret_key: "UTELcvSwFT9t7u51SxExjsnUXjXTLFCHnUKx5trjsKjQLllCr9PwARorGZRILp56"
+

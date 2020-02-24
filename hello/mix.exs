@@ -20,7 +20,7 @@ defmodule Hello.MixProject do
   def application do
     [
       mod: {Hello.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
     ]
   end
 
@@ -43,7 +43,9 @@ defmodule Hello.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:guardian, "~> 1.2"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:httpoison,">= 0.0.0"},
+      {:json, "~> 1.2"}
     ]
   end
 

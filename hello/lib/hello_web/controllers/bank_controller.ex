@@ -10,6 +10,7 @@ defmodule HelloWeb.BankController do
     plug HelloWeb.Plugs.Authorization when action in [:account, :deposit, :transaction, :transactionhanler]
     plug :home_page when action in [:index, :signin]
     
+  
 
     def index(conn,_params) do
       render(conn,_params) 
@@ -113,7 +114,12 @@ defmodule HelloWeb.BankController do
       else
         conn
       end
-
     end
+
+    
+    
+
+ 
+
 end
 
