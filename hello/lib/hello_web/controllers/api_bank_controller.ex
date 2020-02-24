@@ -66,7 +66,7 @@ defmodule HelloWeb.ApiBankController do
                         source_money = Usermanage.show_money(id)
                         target_money = target_money + money
                         source_money = source_money - money
-                        Usermanage.update_money(receiverid,target_money)
+                        Usermanage.update_money(receiverid, target_money)
                         Usermanage.update_money(id,source_money)
                         conn |> send_resp(200,"Transfer to #{receivername} successfully")                     
                     else
@@ -86,7 +86,8 @@ defmodule HelloWeb.ApiBankController do
     # SIGNIN
     def signin(conn,%{"account"=>account,"password"=>password})  do
         case token_sign_in(account,password) do
-             {:ok, token, claims} -> json conn, %{accesstoken: token}
+            #  {:ok, token, claims} -> json conn, %{accesstoken: token}
+                    {:ok, token} -> json conn, %{accesstoken: token}
                                 _ ->  send_resp(conn, 404, "Not found")
             end
     end
@@ -108,43 +109,91 @@ defmodule HelloWeb.ApiBankController do
 
     def token_sign_in(account,password) do
         case verify_account_password(account,password) do
-            {:ok, id} -> Guardian.encode_and_sign(Usermanage.get_user(id),%{}, ttl: {1, :minute})
+            # {:ok, id} -> Guardian.encode_and_sign(Usermanage.get_user(id),%{}, ttl: {1, :minute})
+            {:ok, id} -> jwt_encode(Usermanage.get_user(id))
                     _ ->  {:error, :unauthorized}
         end
     end
 
     def verify_token(token) do
-        case Guardian.decode_and_verify(token) do
+        # case Guardian.decode_and_verify(token) do
+        case jwt_decode(token) do
         {:ok,claim} -> {:ok, claim["sub"]}
                   _ -> {:error, "Unauthorized"}
         end
     end
 
     #jwt
-    defp jwt_encode() do
+    @secret_key "UTELcvSwFT9t7u51SxExjsnUXjXTLFCHnUKx5trjsKjQLllCr9PwARorGZRILp56"
+    @life_time  1   # minute
+    def jwt_encode(user) do
+        # -------------- header ---------------------
         header = %{
-            "alg"=>"alg",
-            "typ"=>"typ"
+            "alg"=>"HS256",
+            "typ"=>"JWT"
         }
+        {:ok, json_header} = JSON.encode(header)
+        jwt_header = Base.url_encode64(json_header)
+        # -------------- claim -------------------
+        time_now = DateTime.utc_now() |> DateTime.to_unix()
         claim= %{
-            "exp"=>"exp",
-            "nbf"=>"nbf",
-            "lat"=>"lat",
-            "sub"=>"sub",
-            "iss"=>"iss",
-            "aud"=>"aud",
-            "jti"=>"jti"
+            "exp"=> time_now + @life_time*60,
+            "nbf"=> time_now - 1,
+            "iat"=> time_now,
+            "sub"=> Integer.to_string(user.id),
+            "iss"=>"bankapi",
+            "aud"=>"bank_app",
         }
-        
+        {:ok, json_claim} = JSON.encode(claim)
+        jwt_claim = Base.url_encode64(json_claim)
+        # --------------- signature -----------------
+        signature = jwt_header<>"."<>jwt_claim
+        jwt_signature = :crypto.hmac(:sha256, @secret_key, signature) |> Base.url_encode64()
+        token = jwt_header<>"."<>jwt_claim<>"."<>jwt_signature
+        {:ok, token}
     end
 
-    defp jwt_decode() do
+    def jwt_decode(token) do
+        [jwt_header,jwt_claim,jwt_signature]=String.split(token,".", parts: 3) 
+        plain_text = jwt_header<>"."<>jwt_claim
+        {:ok, claim}       = decode_baseurl64_json(jwt_claim)
+        signature_secret = :crypto.hmac(:sha256, @secret_key, plain_text) |> Base.url_encode64()
+        if compare_time(signature_secret, jwt_signature,claim) do
+            {:ok, claim}
+        else
+            {:error}
+        end
     end
 
+    defp compare_time(signature_secret, jwt_signature,claim) do
+        time_now = DateTime.utc_now() |> DateTime.to_unix()
+        %{
+            "aud" => aud,
+            "exp" => exp,
+            "iat" => iat,
+            "iss" => iss,
+            "nbf" => nbf,
+            "sub" => sub
+          } = claim
+        if (exp > time_now) && (signature_secret == jwt_signature) do
+            true
+        else
+            false
+        end
+    end
+
+    defp decode_baseurl64_json(baseurl64) do
+        {:ok, json}  = baseurl64 |> Base.url_decode64() 
+        {:ok, map}       = json |> JSON.decode()
+    end
+
+
+    
     #Oauth
     @app_id "197695828014122"
     @app_secret "dd085e5054471410b9fc55fb1fd4de8e"
     @redirect_url "http://localhost:4000/api/bank/FacebookHandler"
+    @facebook_api "https://graph.facebook.com"
 
     def facebook_login(conn,_params) do
         redirect(conn, external: "https://www.facebook.com/v6.0/dialog/oauth?client_id=#{@app_id}&redirect_uri=#{@redirect_url}&state=#{"{st=state123abc,ds=123456789}"}")
@@ -185,14 +234,14 @@ defmodule HelloWeb.ApiBankController do
     end
 
     defp exchange_access_token(code)do
-        url = "https://graph.facebook.com/v6.0/oauth/access_token?client_id=#{@app_id}&redirect_uri=#{@redirect_url}&client_secret=#{@app_secret}&code=#{code}"
+        url = "#{@facebook_api}/v6.0/oauth/access_token?client_id=#{@app_id}&redirect_uri=#{@redirect_url}&client_secret=#{@app_secret}&code=#{code}"
         {:ok, resp} = HTTPoison.get(url)
         {:ok, json_resp} = JSON.decode(resp.body)
         json_resp
     end
 
     defp get_app_access_token() do
-        url = "https://graph.facebook.com/oauth/access_token?client_id=#{@app_id}&client_secret=#{@app_secret}&grant_type=client_credentials"
+        url = "#{@facebook_api}/oauth/access_token?client_id=#{@app_id}&client_secret=#{@app_secret}&grant_type=client_credentials"
         {:ok, resp} = HTTPoison.get(url)
         {:ok, json_resp} = JSON.decode(resp.body)
         json_resp["access_token"]
@@ -200,20 +249,17 @@ defmodule HelloWeb.ApiBankController do
 
     defp inspect_access_token(access_token) do
         app_access_token = get_app_access_token()
-        url = "https://graph.facebook.com/debug_token?input_token=#{access_token}&access_token=#{app_access_token}"
+        url = "#{@facebook_api}/debug_token?input_token=#{access_token}&access_token=#{app_access_token}"
         {:ok, resp} = HTTPoison.get(url)
         {:ok, json_resp} = JSON.decode(resp.body)
          json_resp["data"]
     end
    
     defp get_username_email(access_token,user_id) do
-        url = "https://graph.facebook.com/#{user_id}?fields=name,email&access_token=#{access_token}"
+        url = "#{@facebook_api}/#{user_id}?fields=name,email&access_token=#{access_token}"
         {:ok, resp} = HTTPoison.get(url)
         {:ok, json_resp} = JSON.decode(resp.body)
         json_resp
     end
   end
 
-#   https://graph.facebook.com/v6.0/oauth/access_token?client_id=197695828014122&redirect_uri=http://localhost:4000/api/bank/FacebookHandler&client_secret=dd085e5054471410b9fc55fb1fd4de8e&code=AQDmbXNlQ4DImBioeDSAdFFZn_7nKC9gU6MSYZJYihkqmM_OFhnmWE-ui6S2hJvDnEk46qPwPzmBK6Fk8VnmdHZIMyH7ApeSCXrsPgH9_KFwgUV3U7fs0gCF0YNwv2r61P_Pk57o1r5ZCrpJ6SsCjv2wVFToCxH_dQVMq0P8aHIvd6gMXUaYQYDcOmJCeggjqxyz0ql2zMg6RBhJY28Udn02o4t_syfrZaXKd0vRSf7-aMx0_yRGGawZ4GBgpmUhyHWeM5hbN4ti1QUWOrXWMD5zjgqZxOQ_06iU6-bHJeMrtBxAiVeAAQUcTb09ca_1uTNSmUY4Rf_7dkt_IkZCD1aj%26state=%7Bst%3Dstate123abc%2Cds%3D123456789%7D#_=_
-
-#   url = "https://graph.facebook.com/v6.0/oauth/access_token?client_id=#{client_id}&redirect_uri=#{redirect_url}&client_secret=#{client_secret}&code=#{code}"     
