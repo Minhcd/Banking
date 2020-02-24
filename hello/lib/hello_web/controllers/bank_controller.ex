@@ -4,7 +4,6 @@ defmodule HelloWeb.BankController do
     alias HelloWeb.Router.Helpers
     alias Bcrypt
     import Ecto.Query
-
     # plug LearningPlug, %{}
     # plug :test
     plug HelloWeb.Plugs.AuthenticateUser when action in [:account, :deposit, :transaction, :transactionhanler]
@@ -80,62 +79,66 @@ defmodule HelloWeb.BankController do
       money_socialuser = Socialusermanage.show_money(id)
       if (money_user != nil) do
         if submit == "deposit" do
-        HistoryTransaction.create_datetime(
-          %{
-            user_id: id,
-            datetime: DateTime.utc_now,
-            action: submit,
-            money: elem(Integer.parse(deposit),0)
-            })
-        money_user = money_user + elem(Integer.parse(deposit),0)
-        Usermanage.update_money(id,money_user)
-        conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
-        else if submit == "withdraw" do
-        HistoryTransaction.create_datetime(
-          %{
-            user_id: id,
-            datetime: DateTime.utc_now,
-            action: submit,
-            money: elem(Integer.parse(withdraw),0)
-            })
-        money_user = money_user - elem(Integer.parse(withdraw),0)
-        Usermanage.update_money(id,money_user)
-        conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
-        else
-        conn 
-        |> clear_session()
-        |> redirect(to: Helpers.bank_path(conn, :signin))
-        end
+          HistoryTransaction.create_datetime(
+            %{
+              user_id: id,
+              datetime: DateTime.utc_now,
+              action: submit,
+              money: elem(Integer.parse(deposit),0)
+              })
+          money_user = money_user + elem(Integer.parse(deposit),0)
+          Usermanage.update_money(id,money_user)
+          conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
+        else 
+          if submit == "withdraw" do
+          HistoryTransaction.create_datetime(
+            %{
+              user_id: id,
+              datetime: DateTime.utc_now,
+              action: submit,
+              money: elem(Integer.parse(withdraw),0)
+              })
+          money_user = money_user - elem(Integer.parse(withdraw),0)
+          Usermanage.update_money(id,money_user)
+          conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
+          else
+            conn 
+            |> clear_session()
+            |> redirect(to: Helpers.bank_path(conn, :index))
+            |> halt()
+          end
         end
       else
         if (money_socialuser != nil) do
           if submit == "deposit" do
-            HistoryTransaction.create_datetime(
-              %{
-                user_id: id,
-                datetime: DateTime.utc_now,
-                action: submit,
-                money: elem(Integer.parse(deposit),0)
-                })
-            money_socialuser = money_socialuser + elem(Integer.parse(deposit),0)
-            Usermanage.update_money(id,money_socialuser)
-            conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
-            else if submit == "withdraw" do
-            HistoryTransaction.create_datetime(
-              %{
-                user_id: id,
-                datetime: DateTime.utc_now,
-                action: submit,
-                money: elem(Integer.parse(withdraw),0)
-                })
-            money_socialuser = money_socialuser - elem(Integer.parse(withdraw),0)
-            Usermanage.update_money(id,money_socialuser)
-            conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
-            else
-            conn 
-            |> clear_session()
-            |> redirect(to: Helpers.bank_path(conn, :index))
-            end
+              HistoryTransaction.create_datetime(
+                %{
+                  user_id: id,
+                  datetime: DateTime.utc_now,
+                  action: submit,
+                  money: elem(Integer.parse(deposit),0)
+                  })
+              money_socialuser = money_socialuser + elem(Integer.parse(deposit),0)
+              Usermanage.update_money(id,money_socialuser)
+              conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
+          else
+              if submit == "withdraw" do
+              HistoryTransaction.create_datetime(
+                %{
+                  user_id: id,
+                  datetime: DateTime.utc_now,
+                  action: submit,
+                  money: elem(Integer.parse(withdraw),0)
+                  })
+              money_socialuser = money_socialuser - elem(Integer.parse(withdraw),0)
+              Usermanage.update_money(id,money_socialuser)
+              conn |> redirect(to: Helpers.bank_path(conn, :account,account,id))
+              else
+                conn 
+                |> clear_session()
+                |> redirect(to: Helpers.bank_path(conn, :index))
+                |> halt()
+              end
             end
         end
       end     
@@ -215,19 +218,25 @@ defmodule HelloWeb.BankController do
       {:ok, map}       = json |> JSON.decode()
     end
 
-    #Oauth
+    #Oauth Facebook
     @app_id "197695828014122"
     @app_secret "dd085e5054471410b9fc55fb1fd4de8e"
     @redirect_url "http://localhost:4000/bank/FacebookHandler"
     @facebook_api "https://graph.facebook.com"
+    @state get_csrf_token()
 
     def facebook_login(conn,_params) do
-      redirect(conn, external: "https://www.facebook.com/v6.0/dialog/oauth?client_id=#{@app_id}&redirect_uri=#{@redirect_url}&state=#{"{st=state123abc,ds=123456789}"}&auth_type=rerequest&scope=email")
+      redirect(conn, external: "https://www.facebook.com/v6.0/dialog/oauth?client_id=#{@app_id}&redirect_uri=#{@redirect_url}&state=#{@state}&auth_type=rerequest&scope=email")
     end
 
+    def facebook_login_handler(conn, %{"error" => error, "error_code" => error_code, "error_description" => error_description, "error_reason" => error_reason, "state" => state}) do
+      conn
+          |> put_flash(:error, "Bạn đã không cấp quyền truy cập Facebook")
+          |> redirect(to: Helpers.bank_path(conn, :index))
+          |> halt()
+    end  
     #exchange code for access token
     def facebook_login_handler(conn, %{"code"=> code}) do
-
       %{
           "access_token"=> access_token,
           "expires_in"=> expires_in,
@@ -245,7 +254,7 @@ defmodule HelloWeb.BankController do
           "type" => type,
           "user_id" => user_id
           } = inspect_access_token(access_token)
-
+      
       %{
           "email"=>email,
           "name"=> name
@@ -288,7 +297,5 @@ defmodule HelloWeb.BankController do
         {:ok, json_resp} = JSON.decode(resp.body)
         json_resp
     end
-
-
 end
 
